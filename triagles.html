@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>replit</title>
+	<style>
+		html, body {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		#canvas {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: black;
+		}
+
+		#button {
+			position: fixed; 
+			top: 0px;
+			right: 0px;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="canvas"></canvas>
+
+	<button id="button" onclick="swap()">SWITCH</button>
+
+	<script src="https://unpkg.com/delaunator@5.0.0/delaunator.min.js"></script>
+
+	<script>
+		//find canvas
+		const canvas = document.getElementById('canvas');
+		const ctx = canvas.getContext('2d');
+		canvas.height = window.innerHeight;
+		canvas.width = window.innerWidth;
+		
+		let vertion = 2;
+
+		function swap () {
+			vertion = (vertion + 1) % 9;
+		};
+
+		let particlesArray;
+
+		let mouse = {
+			x: null,
+			y: null,
+			r: (canvas.height / 120) * (canvas.width / 120)
+		};
+		document.addEventListener('mousemove',
+			function (event) {
+				mouse.x = event.x;
+				mouse.y = event.y;
+			}
+		);
+
+		// create particle
+		class Particle {
+			constructor(x, y, velocityX, velocityY, size, color) {
+				this.x = x;
+				this.y = y;
+				this.velocityX = velocityX;
+				this.velocityY = velocityY;
+				this.size = size;
+				this.color = color;
+			}
+
+			// draw the particles
+			draw() {
+				ctx.beginPath();
+				ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+				ctx.fillStyle = '#FF5A33'; // Fixed typo: fillstyle -> fillStyle
+				ctx.fill();
+			}
+
+			// check particle position move particle draw it
+			update() {
+				// check if particle is still in canvas
+				if (this.x > (canvas.width + 25) || this.x < - 25) {
+					this.velocityX = -this.velocityX;
+				}
+				if (this.y > (canvas.height + 25) || this.y < - 25) {
+					this.velocityY = -this.velocityY;
+				}
+
+				this.x += this.velocityX;
+				this.y += this.velocityY;
+				// draw particle
+				this.draw();
+			}
+		}
+		
+		// create particle array
+		function init() {
+			particlesArray = [];
+			let numberOfParticles = (canvas.height * canvas.width) / 5000;
+			for (let i = 0; i < numberOfParticles; i++) {
+				let size = Math.random() * 0 + 0;
+				let x = Math.random() * (innerWidth - size * 2) + size * 2;
+				let y = Math.random() * (innerHeight - size * 2) + size * 2;
+				let velocityX = (Math.random() - 0.5) * 0.25;
+				let velocityY = (Math.random() - 0.5) * 0.25;
+				let color = '#FA7F08';
+				const particle = new Particle(x, y, velocityX, velocityY, size, color);
+				particlesArray.push(particle); // Added the push to particlesArray
+			}
+		}
+		
+		//draw triangles
+		function connect() {
+			let points = [-25, -25, -25, canvas.height + 25, canvas.width + 25, canvas.height + 25, canvas.width + 25,-25];
+			for (let a = 0; a < particlesArray.length; a++) {
+				points.push(particlesArray[a]["x"]);
+				points.push(particlesArray[a]["y"]);
+			}
+			
+			// Create a Delaunay triangulation from the points
+			const delaunay = new Delaunator(points);
+			const triangles = delaunay.triangles;
+			
+			for (let i = 0; i < triangles.length; i += 3) {
+				const index1 = triangles[i];
+				const index2 = triangles[i + 1];
+				const index3 = triangles[i + 2];
+		
+				const x1 = points[index1 * 2];
+				const y1 = points[index1 * 2 + 1];
+				const x2 = points[index2 * 2];
+				const y2 = points[index2 * 2 + 1];
+				const x3 = points[index3 * 2];
+				const y3 = points[index3 * 2 + 1];
+				
+				const avragex = ((x1 + x2 + x3) / 3) / canvas.width;
+				const avragey = ((y1 + y2 + y3) / 3) / canvas.height;
+				
+				ctx.beginPath();
+				ctx.moveTo(points[index1 * 2], points[index1 * 2 + 1]);
+				ctx.lineTo(points[index2 * 2], points[index2 * 2 + 1]);
+				ctx.lineTo(points[index3 * 2], points[index3 * 2 + 1]);
+				ctx.closePath();
+
+				canvasDiagonal = Math.sqrt(Math.pow(canvas.width / canvas.height, 2) + Math.pow(canvas.height / canvas.width, 2));
+				
+				ctx.strokeStyle = "rgba(0,0,0,0)"; 
+				
+				function pythagorean (a,b) {
+					return Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+				}
+
+				function RGBgradiant(float, color1, color2) {
+				  const r = Math.round(color1[0] + (color2[0] - color1[0]) * float);
+				  const g = Math.round(color1[1] + (color2[1] - color1[1]) * float);
+				  const b = Math.round(color1[2] + (color2[2] - color1[2]) * float);
+				  return "rgb(" + r + "," + g + "," + b + ")";
+				}
+
+				if (vertion === 0) {
+					ctx.fillStyle = 'rgba(0,' + Math.sqrt(Math.pow(Math.abs(1.5 - avragex), 2) + Math.pow(Math.abs(1.5 - avragey), 2)) / 2 * 255 + ',' + Math.sqrt(Math.pow(Math.abs(0.5 + avragex), 2) + Math.pow(Math.abs(1.5 - avragey), 2)) / 2 * 255 + ', 0.5)';
+					ctx.setLineDash([]);
+					ctx.lineWidth = 1;
+					
+				} else if (vertion === 1) {
+					ctx.fillStyle = "hsl(" + pythagorean(avragex,avragey) / canvasDiagonal * 360 + "," + 100 + "%, " + pythagorean(avragex,avragey) / canvasDiagonal * 100 + "%)";
+					ctx.setLineDash([]);
+					ctx.lineWidth = 1;
+					
+				} else if (vertion === 2) {
+					ctx.fillStyle = RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey), 1.5) * 0.9, [251, 0, 255], [0, 7, 10]);
+					ctx.strokeStyle = RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey), 1.5) * 0.9, [251, 0, 255], [0, 7, 10]);
+					ctx.setLineDash([]);
+					ctx.lineWidth = 1;
+				
+				} else if ( vertion === 3) {
+					ctx.fillStyle = "hsl(" + pythagorean(avragex,avragey) / canvasDiagonal * 360 * 100 + "," + 100 + "%, " + pythagorean(avragex,avragey) / canvasDiagonal * 0 + 50 + "%)";
+					ctx.setLineDash([]);
+					ctx.lineWidth = 1;
+					
+				} else if (vertion === 4) {
+					ctx.fillStyle = RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey), 1.5), [7, 147, 247], [0, 7, 10]);
+					ctx.strokeStyle = RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey), 1.5) + 0.125, [7, 147, 247], [0, 7, 10]);
+					// Set the line dash pattern (5 units of dash, 5 units of gap)
+					ctx.setLineDash([5, 5]);
+					ctx.lineWidth = 2;
+				
+				} else if (vertion === 5) {
+					ctx.strokeStyle = RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey), 1.5) + 0.125, [7, 147, 247], [0, 7, 10]);
+					// Set the line dash pattern (5 units of dash, 5 units of gap)
+					ctx.setLineDash([5, 5]);
+					ctx.lineWidth = 2;
+
+					const gradient = ctx.createLinearGradient(x1, y1, (x2 + x3) / 2, (y2 + y3) / 2);
+					gradient.addColorStop(0, RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey) + 0.05, 1.5), [7, 147, 247], [0, 7, 10]));
+					gradient.addColorStop(1, RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey), 1.5), [7, 147, 247], [0, 7, 10]));
+					ctx.fillStyle = gradient;
+				
+				} else if (vertion === 6) {
+					// ctx.strokeStyle = RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey), 1.5) + 0.125, [7, 147, 247], [0, 7, 10]);
+					// Set the line dash pattern (5 units of dash, 5 units of gap)
+					ctx.setLineDash([]);
+					ctx.lineWidth = 1;
+
+					const gradient = ctx.createLinearGradient(x1, y1, (x2 + x3) / 2, (y2 + y3) / 2);
+					gradient.addColorStop(0, RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey) + 0.05, 1.5), [7, 147, 247], [0, 7, 10]));
+					gradient.addColorStop(1, RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey), 1.5), [7, 147, 247], [0, 7, 10]));
+					ctx.fillStyle = gradient;
+					ctx.strokeStyle = gradient;
+					
+				} else if (vertion === 7) {
+					ctx.fillStyle = RGBgradiant((avragex + avragey) / 2, [0, 225, 255], [234, 0, 255]);
+					ctx.strokeStyle = RGBgradiant((avragex + avragey) / 2, [0, 225, 255], [234, 0, 255]);
+					ctx.setLineDash([]);
+					ctx.lineWidth = 1;
+				
+				} else if (vertion === 8) {
+					ctx.fillStyle = RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey), 1.5) * 0.9, [5, 222, 237], [0, 0, 5]);
+					ctx.strokeStyle = RGBgradiant(Math.pow(pythagorean(avragex, 1 - avragey), 1.5) * 0.9, [5, 222, 237], [0, 0, 5]);
+					ctx.setLineDash([]);
+					ctx.lineWidth = 1;
+				
+				}
+				
+				ctx.fill();
+				ctx.stroke();
+			}
+		}
+		
+		// animation loop
+		function animate() {
+			requestAnimationFrame(animate);
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			
+			for (let i = 0; i < particlesArray.length; i++) {
+				particlesArray[i].update();
+			}
+			connect();
+		}
+
+		// resize event
+		window.addEventListener('resize', function(){
+		  canvas.width = window.innerWidth; 
+		  canvas.height = window.innerHeight; 
+		  mouse.r = (canvas.height / 120) * (canvas.width / 120);
+		  init();
+		});
+		
+		// mouse out event
+		document.addEventListener('mouseout', function(){
+		  mouse.x = null;
+		  mouse.y = null;
+		});
+
+		init();
+		animate();
+	</script>
+</body>
+</html>
