@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>replit</title>
+	<title>triangles</title>
 	<style>
 		html, body {
 			margin: 0;
@@ -105,8 +105,8 @@
 				let size = Math.random() * 0 + 0;
 				let x = Math.random() * (innerWidth - size * 2) + size * 2;
 				let y = Math.random() * (innerHeight - size * 2) + size * 2;
-				let velocityX = (Math.random() - 0.5) * 0.5;
-				let velocityY = (Math.random() - 0.5) * 0.5;
+				let velocityX = (Math.random() - 0.5) * 1;
+				let velocityY = (Math.random() - 0.5) * 1;
 				let color = '#FA7F08';
 				const particle = new Particle(x, y, velocityX, velocityY, size, color);
 				particlesArray.push(particle); // Added the push to particlesArray
